@@ -4,6 +4,8 @@ from functools import reduce
 
 import requests
 
+base_url = 'https://rt.api.learningman.top/data/books/img/'
+
 
 class BookObject(object):
     def __init__(self, isbn: str):
@@ -17,7 +19,7 @@ class BookObject(object):
         self.info_dict = {
             'title': self.title,
             'sub_title': self.sub_title,
-            'pic_base64': self.pic_base64,
+            'pic_url': self.pic_url,
             'page_total': self.page_total,
             'author_str': self.author_str
         }
@@ -27,7 +29,7 @@ class BookObject(object):
             data = json.loads(f.read())
             self.title = data['title']
             self.sub_title = data['sub_title']
-            self.pic_base64 = data['pic_base64']
+            self.pic_url = data['pic_url']
             self.page_total = data['page_total']
             self.author_str = data['author_str']
 
@@ -35,14 +37,17 @@ class BookObject(object):
         data = json.loads(requests.get(self.url + self.isbn, params={"apikey": self.api_key}).content)
         self.title = data['title']
         self.sub_title = data['subtitle']
-        self.pic_base64 = 'data:image/jpg;base64,' + base64.b64encode(requests.get(data['images']['medium'].content))
+        # self.pic_url = 'data:image/jpg;base64,' + base64.b64encode(requests.get(data['images']['medium'].content))
+        self.pic_url = base_url+self.isbn+'.jpg'
+        with open('../data/books/img/'+self.isbn+'.jpg','w+') as f:
+            f.write(requests.get(data['images']['medium'].content))
         self.page_total = data['pages']
         self.author_str = reduce(lambda str, list_one: str + '; ' + list_one, data['author'])
         with open('../data/books/{}'.format(self.isbn), 'w+') as f:
             f.write(json.dumps({
                 'title': self.title,
                 'sub_title': self.sub_title,
-                'pic_base64': self.pic_base64,
+                'pic_url': self.pic_url,
                 'page_total': self.page_total,
                 'author_str': self.author_str
             }))
