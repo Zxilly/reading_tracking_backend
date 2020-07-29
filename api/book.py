@@ -17,6 +17,7 @@ class BookObject(object):
         except:
             self.add_cache()
         self.info_dict = {
+            'isbn': self.isbn,
             'title': self.title,
             'sub_title': self.sub_title,
             'pic_url': self.pic_url,
@@ -25,7 +26,7 @@ class BookObject(object):
         }
 
     def get_cache(self):
-        with open('../data/books/{}'.format(self.isbn), 'r+') as f:
+        with open('../data/books/{}'.format(self.isbn)+'.json', 'r+',encoding='UTF-8') as f:
             data = json.loads(f.read())
             self.title = data['title']
             self.sub_title = data['sub_title']
@@ -39,15 +40,15 @@ class BookObject(object):
         self.sub_title = data['subtitle']
         # self.pic_url = 'data:image/jpg;base64,' + base64.b64encode(requests.get(data['images']['medium'].content))
         self.pic_url = base_url+self.isbn+'.jpg'
-        with open('../data/books/img/'+self.isbn+'.jpg','w+') as f:
-            f.write(requests.get(data['images']['medium'].content))
+        with open('../data/books/img/'+self.isbn+'.jpg','wb') as f:
+            f.write(requests.get(data['images']['medium']).content)
         self.page_total = data['pages']
         self.author_str = reduce(lambda str, list_one: str + '; ' + list_one, data['author'])
-        with open('../data/books/{}'.format(self.isbn), 'w+') as f:
+        with open('../data/books/{}'.format(self.isbn)+'.json', 'w+',encoding='UTF-8') as f:
             f.write(json.dumps({
                 'title': self.title,
                 'sub_title': self.sub_title,
                 'pic_url': self.pic_url,
                 'page_total': self.page_total,
                 'author_str': self.author_str
-            }))
+            },ensure_ascii=False))

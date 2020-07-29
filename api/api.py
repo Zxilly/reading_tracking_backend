@@ -1,9 +1,8 @@
 import json
-from typing import Optional, List
+from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI, Body
-from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -21,10 +20,9 @@ app.add_middleware(
 
 
 class Book(BaseModel):
-    progress: int
+    progress: Optional[int] = None
     isbn: str
-    tip: str
-    data: Optional[dict] = None
+    tip: Optional[str] = None
 
 
 def name_get(user: str):
@@ -41,13 +39,73 @@ async def output(user: str):
 
 
 @app.post('/api')
-async def input(user: str, books: Optional[List[Book]] = Body(..., embed=True)):
-    for book in books:
-        BookInfo = BookObject(book.isbn)
-        book.data = BookInfo.info_dict
-    with open(name_get(user), 'w+') as f:
-        f.write(json.dumps(jsonable_encoder(books)))
-    return {'code': 1, 'msg': 'Update success.'}
+async def input(user: str, method: str = Body(...), book: Book = Body(..., embed=True)):
+    """
+    请求结构
+    user
+    method
+    book:{
+        progress
+        isbn
+        tip
+        }
+    用户文件结构
+    user
+    books:[
+    {
+        isbn
+        title
+        subtitle
+        img_url
+        author
+        page_total
+    },{...}
+        ]
+    """
+    if (len(book.isbn) != 13):
+        return {'code': 0, 'msg': 'ISBN输入错误'}
+
+    if (method == 'add'):
+        try:
+            with open(name_get(user), 'r+') as f:
+                file_obj = json.loads(f.read())
+        except:
+            file_obj = None
+        book_obj = BookObject(book.isbn)
+        book_obj.info_dict['progress'] = book.progress
+        book_obj.info_dict['tip'] = book.tip
+        book_progress = book.progress
+        book_tip = book.tip
+        if (file_obj):
+            file_obj['books'].append(book_obj.info_dict)
+        else:
+            file_obj = {}
+            file_obj['user'] = user
+            file_obj['books'] = []
+            file_obj['books'].append(book_obj.info_dict)
+        with open(name_get(user), 'w+') as f:
+            f.write(json.dumps(file_obj, ensure_ascii=False))
+        return {'code': 1, 'msg': '{} 已开始跟踪'.format(book_obj.title)}
+
+    if(method == 'update'):
+        with open(name_get(user), 'r+') as f:
+            file_obj = json.loads(f.read())
+            for one_book in file_obj['books']:
+                if(one_book['isbn']==book.isbn):
+                    one_book['progress'] = book.progress
+                    one_book['tip'] = book.tip
+                    book_name = one_book['title']
+            f.write(json.dumps(file_obj,ensure_ascii=False))
+        return {'code': 2, 'msg': '{} 状态已更新'.format(book_name)}
+
+
+    if (method == 'delete'):
+        with open(name_get(user), 'w+') as f:
+            file_obj = json.loads(f.read())
+            book_obj = BookObject(book.isbn)
+            file_obj['books'].remove(book_obj.info_dict)
+            f.write(json.dumps(file_obj))
+        return {'code': 3, 'msg': '{} 已不再追踪'.format(book_obj.title)}
 
 
 if __name__ == '__main__':
