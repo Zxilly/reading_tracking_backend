@@ -32,7 +32,7 @@ def name_get(user: str):
 @app.get('/api')
 async def output(user: str):
     try:
-        with open(name_get(user), 'r+') as f:
+        with open(name_get(user), 'r+', encoding='UTF-8') as f:
             return {'code': 1, 'data': json.loads(f.read())}
     except:
         return {'code': 0, 'msg': 'Can not find any record. Please add your tracking first.'}
@@ -62,12 +62,12 @@ async def input(user: str, method: str = Body(...), book: Book = Body(..., embed
     },{...}
         ]
     """
-    if (len(book.isbn) != 13):
+    if len(book.isbn) != 13:
         return {'code': 0, 'msg': 'ISBN输入错误'}
 
     if (method == 'add'):
         try:
-            with open(name_get(user), 'r+',encoding='UTF-8') as f:
+            with open(name_get(user), 'r+', encoding='UTF-8') as f:
                 file_obj = json.loads(f.read())
             for one_book in file_obj['books']:
                 if (one_book['isbn'] == book.isbn):
@@ -85,32 +85,31 @@ async def input(user: str, method: str = Body(...), book: Book = Body(..., embed
             file_obj['user'] = user
             file_obj['books'] = []
             file_obj['books'].append(book_obj.info_dict)
-        with open(name_get(user), 'w+',encoding='UTF-8') as f:
+        with open(name_get(user), 'w+', encoding='UTF-8') as f:
             f.write(json.dumps(file_obj, ensure_ascii=False))
         return {'code': 1, 'msg': '{} 已开始跟踪'.format(book_obj.title)}
 
-    if(method == 'update'):
+    if (method == 'update'):
         with open(name_get(user), 'r+', encoding='UTF-8') as f:
             file_obj = json.loads(f.read())
             for one_book in file_obj['books']:
-                if(one_book['isbn']==book.isbn):
+                if (one_book['isbn'] == book.isbn):
                     one_book['progress'] = book.progress
                     one_book['tip'] = book.tip
                     book_name = one_book['title']
         with open(name_get(user), 'w+', encoding='UTF-8') as f:
-            f.write(json.dumps(file_obj,ensure_ascii=False))
+            f.write(json.dumps(file_obj, ensure_ascii=False))
         return {'code': 2, 'msg': '{} 状态已更新'.format(book_name)}
 
-
     if (method == 'delete'):
-        with open(name_get(user), 'r+',encoding='UTF-8') as f:
+        with open(name_get(user), 'r+', encoding='UTF-8') as f:
             file_obj = json.loads(f.read())
             book_obj = BookObject(book.isbn)
             for one_book in file_obj['books']:
-                if(one_book['isbn']==book.isbn):
+                if (one_book['isbn'] == book.isbn):
                     file_obj['books'].remove(one_book)
         with open(name_get(user), 'w+', encoding='UTF-8') as f:
-            f.write(json.dumps(file_obj,ensure_ascii=False))
+            f.write(json.dumps(file_obj, ensure_ascii=False))
         return {'code': 3, 'msg': '{} 已不再追踪'.format(book_obj.title)}
 
 
