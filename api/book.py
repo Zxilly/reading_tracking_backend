@@ -43,7 +43,10 @@ class BookObject(object):
         with open('../data/books/img/'+self.isbn+'.jpg','wb') as f:
             f.write(requests.get(data['images']['medium']).content)
         self.page_total = data['pages']
-        self.author_str = reduce(lambda str, list_one: str + '; ' + list_one, data['author'])
+        try:
+            self.author_str = reduce(lambda str, list_one: str + '; ' + list_one, data['author'])
+        except:
+            self.author_str = ''
         with open('../data/books/{}'.format(self.isbn)+'.json', 'w+',encoding='UTF-8') as f:
             f.write(json.dumps({
                 'title': self.title,

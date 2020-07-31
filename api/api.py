@@ -32,9 +32,11 @@ def name_get(user: str):
 @app.get('/api')
 async def output(user: str):
     try:
+        #print('code=1')
         with open(name_get(user), 'r+', encoding='UTF-8') as f:
             return {'code': 1, 'data': json.loads(f.read())}
     except:
+        #print(('code=0'))
         return {'code': 0, 'msg': 'Can not find any record. Please add your tracking first.'}
 
 
@@ -63,7 +65,7 @@ async def input(user: str, method: str = Body(...), book: Book = Body(..., embed
         ]
     """
     if len(book.isbn) != 13:
-        return {'code': 0, 'msg': 'ISBN输入错误'}
+        return {'code': 5, 'msg': 'ISBN错误'}
 
     if (method == 'add'):
         try:
@@ -74,8 +76,10 @@ async def input(user: str, method: str = Body(...), book: Book = Body(..., embed
                     return {'code': 4, 'msg': '{} 已在跟踪中'.format(one_book['title'])}
         except:
             file_obj = None
-
-        book_obj = BookObject(book.isbn)
+        try:
+            book_obj = BookObject(book.isbn)
+        except:
+            return {'code': 5, 'msg': 'ISBN错误'}
         book_obj.info_dict['progress'] = book.progress
         book_obj.info_dict['tip'] = book.tip
         if (file_obj):
@@ -88,6 +92,7 @@ async def input(user: str, method: str = Body(...), book: Book = Body(..., embed
         with open(name_get(user), 'w+', encoding='UTF-8') as f:
             f.write(json.dumps(file_obj, ensure_ascii=False))
         return {'code': 1, 'msg': '{} 已开始跟踪'.format(book_obj.title)}
+
 
     if (method == 'update'):
         with open(name_get(user), 'r+', encoding='UTF-8') as f:
@@ -114,4 +119,4 @@ async def input(user: str, method: str = Body(...), book: Book = Body(..., embed
 
 
 if __name__ == '__main__':
-    uvicorn.run(app='api:app', host='0.0.0.0', port=4000, debug=False)
+    uvicorn.run(app='api:app', host='0.0.0.0', port=4000, debug=True)
