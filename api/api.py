@@ -71,7 +71,7 @@ async def input(user: str, method: str = Body(...), book: Book = Body(..., embed
                 file_obj = json.loads(f.read())
             for one_book in file_obj['books']:
                 if (one_book['isbn'] == book.isbn):
-                    return {'code': 4, 'msg': '{} 已跟踪'.format(one_book['title'])}
+                    return {'code': 4, 'msg': '{} 已在跟踪中'.format(one_book['title'])}
         except:
             file_obj = None
 
