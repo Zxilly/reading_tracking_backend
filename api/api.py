@@ -1,10 +1,12 @@
 import json
-from typing import Optional
-
 import uvicorn
+
 from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
 from pydantic import BaseModel
+from typing import Optional
 
 from book import BookObject
 
@@ -18,6 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.mount("/data/books/img", StaticFiles(directory="../data/books/img"), name="static")
 
 class Book(BaseModel):
     progress: Optional[int] = None
@@ -32,11 +35,11 @@ def name_get(user: str):
 @app.get('/api')
 async def output(user: str):
     try:
-        #print('code=1')
+        # print('code=1')
         with open(name_get(user), 'r+', encoding='UTF-8') as f:
             return {'code': 1, 'data': json.loads(f.read())}
     except:
-        #print(('code=0'))
+        # print(('code=0'))
         return {'code': 0, 'msg': 'Can not find any record. Please add your tracking first.'}
 
 
@@ -67,6 +70,9 @@ async def input(user: str, method: str = Body(...), book: Book = Body(..., embed
     if len(book.isbn) != 13:
         return {'code': 5, 'msg': 'ISBN错误'}
 
+    if user == '':
+        return {'code': 6, 'msg': '用户名为空'}
+
     if (method == 'add'):
         try:
             with open(name_get(user), 'r+', encoding='UTF-8') as f:
@@ -92,7 +98,6 @@ async def input(user: str, method: str = Body(...), book: Book = Body(..., embed
         with open(name_get(user), 'w+', encoding='UTF-8') as f:
             f.write(json.dumps(file_obj, ensure_ascii=False))
         return {'code': 1, 'msg': '{} 已开始跟踪'.format(book_obj.title)}
-
 
     if (method == 'update'):
         with open(name_get(user), 'r+', encoding='UTF-8') as f:
