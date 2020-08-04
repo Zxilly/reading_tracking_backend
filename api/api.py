@@ -26,6 +26,9 @@ class Book(BaseModel):
     progress: Optional[int] = None
     isbn: str
     tip: Optional[str] = None
+    title: Optional[str] = None
+    author: Optional[str] = None
+    page: Optional[str] = None
 
 
 def name_get(user: str):
@@ -53,6 +56,9 @@ async def input(user: str, method: str = Body(...), book: Book = Body(..., embed
         progress
         isbn
         tip
+        title
+        author
+        page
         }
     用户文件结构
     user
@@ -62,7 +68,7 @@ async def input(user: str, method: str = Body(...), book: Book = Body(..., embed
         title
         subtitle
         img_url
-        author
+        author_str
         page_total
     },{...}
         ]
@@ -110,6 +116,19 @@ async def input(user: str, method: str = Body(...), book: Book = Body(..., embed
         with open(name_get(user), 'w+', encoding='UTF-8') as f:
             f.write(json.dumps(file_obj, ensure_ascii=False))
         return {'code': 2, 'msg': '{} 状态已更新'.format(book_name)}
+
+    if(method == 'edit'):
+        with open(name_get(user),'r+',encoding='UTF-8') as f:
+            file_obj = json.loads(f.read())
+            for one_book in file_obj['books']:
+                if (one_book['isbn'] == book.isbn):
+                    one_book['title'] = book.title
+                    one_book['author_str'] = book.author
+                    one_book['page_total'] = book.page
+                    book_name = one_book['title']
+        with open(name_get(user), 'w+', encoding='UTF-8') as f:
+            f.write(json.dumps(file_obj, ensure_ascii=False))
+        return {'code': 7, 'msg': '{} 信息已编辑'.format(book_name)}
 
     if (method == 'delete'):
         with open(name_get(user), 'r+', encoding='UTF-8') as f:
