@@ -1,12 +1,11 @@
 import json
-import uvicorn
+from typing import Optional
 
+import uvicorn
 from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-
 from pydantic import BaseModel
-from typing import Optional
 
 from book import BookObject
 
@@ -21,6 +20,7 @@ app.add_middleware(
 )
 
 app.mount("/data/books/img", StaticFiles(directory="../data/books/img"), name="static")
+
 
 class Book(BaseModel):
     progress: Optional[int] = None
@@ -40,9 +40,14 @@ async def output(user: str):
     try:
         # print('code=1')
         with open(name_get(user), 'r+', encoding='UTF-8') as f:
-            return {'code': 1, 'data': json.loads(f.read())}
+            data = json.loads(f.read())
+            if (len(data['books']) != 0):
+                return {'code': 1, 'data': data}
+            else:
+                return {'code': 0, 'msg': 'No book is tracking'}
     except:
         # print(('code=0'))
+        # print(traceback.format_exc())
         return {'code': 0, 'msg': 'Can not find any record. Please add your tracking first.'}
 
 
@@ -117,8 +122,8 @@ async def input(user: str, method: str = Body(...), book: Book = Body(..., embed
             f.write(json.dumps(file_obj, ensure_ascii=False))
         return {'code': 2, 'msg': '{} 状态已更新'.format(book_name)}
 
-    if(method == 'edit'):
-        with open(name_get(user),'r+',encoding='UTF-8') as f:
+    if (method == 'edit'):
+        with open(name_get(user), 'r+', encoding='UTF-8') as f:
             file_obj = json.loads(f.read())
             for one_book in file_obj['books']:
                 if (one_book['isbn'] == book.isbn):
