@@ -35,7 +35,7 @@ class BookObject(object):
 
     def add_cache(self):
         data = json.loads(requests.get(self.url + self.isbn, params={"apikey": self.api_key}).content)
-        print(data)
+        #print(data)
         self.title = data['title']
         # self.sub_title = data['subtitle']
         # self.pic_url = 'data:image/jpg;base64,' + base64.b64encode(requests.get(data['images']['medium'].content))
