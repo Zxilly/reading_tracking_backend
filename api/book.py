@@ -19,7 +19,6 @@ class BookObject(object):
             self.get_cache()
         except:
             self.add_cache_parser()
-        exit(0)
         self.info_dict = {
             'isbn': self.isbn,
             'title': self.title,
