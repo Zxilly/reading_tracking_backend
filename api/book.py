@@ -64,13 +64,33 @@ class BookObject(object):
         html = requests.get(self.parser_url + self.isbn, headers=headers).content.decode(encoding='UTF-8')
         html_object = BeautifulSoup(html, "lxml")
         info = html_object.find(id="info")
+        with open('a.html', 'w+', encoding='UTF-8') as f:
+            f.write(info.__str__())
         book_name = html_object.find(name='h1').find(name='span').string
         book_cover = html_object.find(class_='nbg')['href']
         try:
             author_name = \
-            info.find(name='span', string=" 作者").parent.get_text().replace(" ", "").replace("\n", "").split("作者:")[1]
+                info.find(name='span', string=" 作者").parent.get_text().replace(" ", "").replace("\n", "").split("作者:")[
+                    1]
         except:
-            author_name = ""
+            try:
+                author_name = ''
+                author_pointer = info.find(name='span', string="作者:").next_sibling
+                while True:
+                    author_pointer = author_pointer.next_sibling
+                    # print(author_pointer)
+                    # print(author_pointer.name)
+                    if author_pointer.name != 'br':
+                        if author_pointer.name == 'a':
+                            author_name += author_pointer.get_text(strip=True) + '/'
+                            # print('author is ' + author_name)
+                    else:
+                        author_name = author_name.rstrip('/')
+                        break
+            except:
+                # print('error')
+                author_name = ""
+
         try:
             page_num = info.find(name='span', string="页数:").next_sibling.replace(" ", "")
         except:
@@ -79,7 +99,7 @@ class BookObject(object):
         self.pic_url = base_url + self.isbn + '.jpg'
         with open('../data/books/img/' + self.isbn + '.jpg', 'wb') as f:
             f.write(requests.get(book_cover).content)
-        self.page_total = page_num
+        self.page_total = int(page_num)
         self.author_str = author_name
 
         with open('../data/books/{}'.format(self.isbn) + '.json', 'w+', encoding='UTF-8') as f:
@@ -92,6 +112,5 @@ class BookObject(object):
             }, ensure_ascii=False))
 
 
-
 if __name__ == '__main__':
-    a = BookObject("9787553518510")
+    a = BookObject("9787115279460")
