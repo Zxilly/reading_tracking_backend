@@ -101,7 +101,7 @@ class BookObject(object):
         except:
             page_num = 0
         self.title = book_name
-        print(book_cover.find("update_image"))
+        # print(book_cover.find("update_image"))
         if book_cover.find("update_image") == -1:
             self.pic_url = base_url + self.isbn + '.jpg'
             with open('../data/books/img/' + self.isbn + '.jpg', 'wb') as f:
