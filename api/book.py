@@ -15,6 +15,11 @@ class BookObject(object):
         self.url = "https://api.douban.com/v2/book/isbn/"
         self.parser_url = "https://book.douban.com/isbn/"
         self.api_key = "0b2bdeda43b5688921839c8ecb20399b"
+        self.title = ''
+        # self.sub_title = data['sub_title']
+        self.pic_url = ''
+        self.page_total = 0
+        self.author_str = ''
         try:
             self.get_cache()
         except:
@@ -39,7 +44,7 @@ class BookObject(object):
 
     def add_cache(self):
         data = json.loads(requests.get(self.url + self.isbn, params={"apikey": self.api_key}).content)
-        print("data is" + data)
+        # print("data is" + data)
         self.title = data['title']
         # self.sub_title = data['subtitle']
         # self.pic_url = 'data:image/jpg;base64,' + base64.b64encode(requests.get(data['images']['medium'].content))
@@ -64,14 +69,14 @@ class BookObject(object):
         html = requests.get(self.parser_url + self.isbn, headers=headers).content.decode(encoding='UTF-8')
         html_object = BeautifulSoup(html, "lxml")
         info = html_object.find(id="info")
-        with open('a.html', 'w+', encoding='UTF-8') as f:
-            f.write(info.__str__())
+        # with open('a.html', 'w+', encoding='UTF-8') as f:
+        #     f.write(info.__str__())
         book_name = html_object.find(name='h1').find(name='span').string
         book_cover = html_object.find(class_='nbg')['href']
         try:
             author_name = \
-                info.find(name='span', string=" 作者").parent.get_text().replace(" ", "").replace("\n", "").split("作者:")[
-                    1]
+                info.find(name='span', string=" 作者").parent.get_text().replace(" ", "").replace("\n", "") \
+                    .split("作者:")[1]
         except:
             try:
                 author_name = ''
@@ -96,9 +101,13 @@ class BookObject(object):
         except:
             page_num = 0
         self.title = book_name
-        self.pic_url = base_url + self.isbn + '.jpg'
-        with open('../data/books/img/' + self.isbn + '.jpg', 'wb') as f:
-            f.write(requests.get(book_cover).content)
+        print(book_cover.find("update_image"))
+        if book_cover.find("update_image") == -1:
+            self.pic_url = base_url + self.isbn + '.jpg'
+            with open('../data/books/img/' + self.isbn + '.jpg', 'wb') as f:
+                f.write(requests.get(book_cover).content)
+        else:
+            self.pic_url = ''
         self.page_total = int(page_num)
         self.author_str = author_name
 
@@ -113,4 +122,4 @@ class BookObject(object):
 
 
 if __name__ == '__main__':
-    a = BookObject("9787115279460")
+    a = BookObject("9787040511420")
