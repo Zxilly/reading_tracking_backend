@@ -101,10 +101,11 @@ class BookObject(object):
         except:
             page_num = 0
         self.title = book_name
+        # print(book_cover)
         if book_cover.find("update_image") == -1:
             self.pic_url = base_url + self.isbn + '.jpg'
             with open('../data/books/img/' + self.isbn + '.jpg', 'wb') as f:
-                f.write(requests.get(book_cover).content)
+                f.write(requests.get(book_cover,headers=headers).content)
         else:
             self.pic_url = ''
         self.page_total = int(page_num)
@@ -121,4 +122,4 @@ class BookObject(object):
 
 
 if __name__ == '__main__':
-    a = BookObject("9787040242249")
+    a = BookObject("9787508344980")
