@@ -41,7 +41,7 @@ async def output(user: str):
         # print('code=1')
         with open(name_get(user), 'r+', encoding='UTF-8') as f:
             data = json.loads(f.read())
-            if (len(data['books']) != 0):
+            if len(data['books']) != 0:
                 return {'code': 1, 'data': data}
             else:
                 return {'code': 0, 'msg': 'No book is tracking'}
@@ -52,7 +52,7 @@ async def output(user: str):
 
 
 @app.post('/api')
-async def input(user: str, method: str = Body(...), book: Book = Body(..., embed=True)):
+async def api(user: str, method: str = Body(...), book: Book = Body(..., embed=True)):
     """
     请求结构
     user
@@ -84,12 +84,12 @@ async def input(user: str, method: str = Body(...), book: Book = Body(..., embed
     if user == '':
         return {'code': 6, 'msg': '用户名为空'}
 
-    if (method == 'add'):
+    if method == 'add':
         try:
             with open(name_get(user), 'r+', encoding='UTF-8') as f:
                 file_obj = json.loads(f.read())
             for one_book in file_obj['books']:
-                if (one_book['isbn'] == book.isbn):
+                if one_book['isbn'] == book.isbn:
                     return {'code': 4, 'msg': '{} 已在跟踪中'.format(one_book['title'])}
         except:
             file_obj = None
@@ -99,22 +99,20 @@ async def input(user: str, method: str = Body(...), book: Book = Body(..., embed
             return {'code': 5, 'msg': 'ISBN错误'}
         book_obj.info_dict['progress'] = book.progress
         book_obj.info_dict['tip'] = book.tip
-        if (file_obj):
+        if file_obj:
             file_obj['books'].append(book_obj.info_dict)
         else:
-            file_obj = {}
-            file_obj['user'] = user
-            file_obj['books'] = []
+            file_obj = {'user': user, 'books': []}
             file_obj['books'].append(book_obj.info_dict)
         with open(name_get(user), 'w+', encoding='UTF-8') as f:
             f.write(json.dumps(file_obj, ensure_ascii=False))
         return {'code': 1, 'msg': '{} 已开始跟踪'.format(book_obj.title)}
 
-    if (method == 'update'):
+    if method == 'update':
         with open(name_get(user), 'r+', encoding='UTF-8') as f:
             file_obj = json.loads(f.read())
             for one_book in file_obj['books']:
-                if (one_book['isbn'] == book.isbn):
+                if one_book['isbn'] == book.isbn:
                     one_book['progress'] = book.progress
                     one_book['tip'] = book.tip
                     book_name = one_book['title']
@@ -122,11 +120,11 @@ async def input(user: str, method: str = Body(...), book: Book = Body(..., embed
             f.write(json.dumps(file_obj, ensure_ascii=False))
         return {'code': 2, 'msg': '{} 状态已更新'.format(book_name)}
 
-    if (method == 'edit'):
+    if method == 'edit':
         with open(name_get(user), 'r+', encoding='UTF-8') as f:
             file_obj = json.loads(f.read())
             for one_book in file_obj['books']:
-                if (one_book['isbn'] == book.isbn):
+                if one_book['isbn'] == book.isbn:
                     one_book['title'] = book.title
                     one_book['author_str'] = book.author
                     one_book['page_total'] = book.page
@@ -135,12 +133,12 @@ async def input(user: str, method: str = Body(...), book: Book = Body(..., embed
             f.write(json.dumps(file_obj, ensure_ascii=False))
         return {'code': 7, 'msg': '{} 信息已编辑'.format(book_name)}
 
-    if (method == 'delete'):
+    if method == 'delete':
         with open(name_get(user), 'r+', encoding='UTF-8') as f:
             file_obj = json.loads(f.read())
             book_obj = BookObject(book.isbn)
             for one_book in file_obj['books']:
-                if (one_book['isbn'] == book.isbn):
+                if one_book['isbn'] == book.isbn:
                     file_obj['books'].remove(one_book)
         with open(name_get(user), 'w+', encoding='UTF-8') as f:
             f.write(json.dumps(file_obj, ensure_ascii=False))

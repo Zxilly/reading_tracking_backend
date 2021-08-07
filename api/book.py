@@ -6,7 +6,8 @@ from bs4 import BeautifulSoup
 
 base_url = '/data/books/img/'
 headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36'}
+    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                  'Chrome/79.0.3945.88 Safari/537.36'}
 
 
 class BookObject(object):
@@ -22,7 +23,7 @@ class BookObject(object):
         self.author_str = ''
         try:
             self.get_cache()
-        except:
+        except FileNotFoundError:
             self.add_cache_parser()
         self.info_dict = {
             'isbn': self.isbn,
@@ -53,7 +54,7 @@ class BookObject(object):
             f.write(requests.get(data['image']).content)
         self.page_total = data['pages']
         try:
-            self.author_str = reduce(lambda str, list_one: str + '; ' + list_one, data['author'])
+            self.author_str = reduce(lambda string, list_one: string + '; ' + list_one, data['author'])
         except:
             self.author_str = ''
         with open('../data/books/{}'.format(self.isbn) + '.json', 'w+', encoding='UTF-8') as f:
@@ -66,7 +67,10 @@ class BookObject(object):
             }, ensure_ascii=False))
 
     def add_cache_parser(self):
-        html = requests.get(self.parser_url + self.isbn, headers=headers).content.decode(encoding='UTF-8')
+        resp = requests.get(self.parser_url + self.isbn, headers=headers)
+        if not resp.ok:
+            raise Exception("Not find ISBN")
+        html = resp.content.decode(encoding='UTF-8')
         html_object = BeautifulSoup(html, "lxml")
         info = html_object.find(id="info")
         # with open('a.html', 'w+', encoding='UTF-8') as f:
@@ -105,7 +109,7 @@ class BookObject(object):
         if book_cover.find("update_image") == -1:
             self.pic_url = base_url + self.isbn + '.jpg'
             with open('../data/books/img/' + self.isbn + '.jpg', 'wb') as f:
-                f.write(requests.get(book_cover,headers=headers).content)
+                f.write(requests.get(book_cover, headers=headers).content)
         else:
             self.pic_url = ''
         self.page_total = int(page_num)
@@ -122,4 +126,4 @@ class BookObject(object):
 
 
 if __name__ == '__main__':
-    a = BookObject("9787508344980")
+    a = BookObject("9787115524836")
